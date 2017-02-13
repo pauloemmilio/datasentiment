@@ -30,9 +30,6 @@ def check_tweet(tweet, c):
             return False
         if(str(row[1]) == str(tweet['id'])):
             return False
-        for k in row:
-            if(k == "'" or k == '"'):
-                return False
     return True
     
 def get_client():        
