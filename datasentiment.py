@@ -37,9 +37,13 @@ def check_tweet(tweet, c):
     c.execute("SELECT * FROM datasentiment")
     rows = c.fetchall()
     for row in rows:
-        if(str(row[1]) == str(tweet['id'])):
+        if('"' in tweet['text']):
+            return False
+        if("'" in tweet['text']):
             return False
         if(tweet['text'][:4] == "RT @"):
+            return False
+        if(str(row[1]) == str(tweet['id'])):
             return False
         for k in row:
             if(k == "'" or k == '"'):
@@ -47,10 +51,10 @@ def check_tweet(tweet, c):
     return True
     
 def get_client():        
-    consumer_key = ''
-    consumer_secret = ''
-    token_key = ''
-    token_secret = ''
+    consumer_key = 'XvboRjR2hR46xOdtszALnO6x9'
+    consumer_secret = 'XPrDtZqa26LGYbHKy3oHFx9S28KnGCgf7t1YYCLg0ffCTB008Q'
+    token_key = '2488355484-rh8Nl9DfkZa1OQKSmjf04MKs4u9wDDhy96YpKHh'
+    token_secret = 'bMTr9xWpnrFBXEj96YPCJHo6GCw6JSlHzjR3G1nt1TZcj'
     consumer = oauth2.Consumer(consumer_key, consumer_secret)
     token = oauth2.Token(token_key, token_secret)
     cliente = oauth2.Client(consumer, token)
@@ -64,7 +68,7 @@ def bd_counter(c):
 #================================   END FUNCTIONS   ================================#
 
 #   CRIAR CONEXÃO COM O BANCO
-con = psycopg2.connect(host='localhost', user = 'postgres', password = '', dbname = 'datasentiment')
+con = psycopg2.connect(host='localhost', user = 'postgres', password = 'hansolo', dbname = 'datasentiment')
 print("conexão realizada com o banco")
 
 #   CRIAÇÃO DO CURSOR AUXILIAR
@@ -113,12 +117,14 @@ while True:
                     print("inseriu " , counter , " tweet(s)")
         except Exception:
             counter = bd_counter(c)
+            con.commit()
             print("até o momento foram inseridos " + str(counter) + " tweet(s) no banco de dados...")
             for i in range(15):
                 print("aguarde " , 15 - i , " minutos")
                 time.sleep(65)
             pass
     counter = bd_counter(c)
+    con.commit()
     if(counter>=15000):
         print("finalizado")
         break
