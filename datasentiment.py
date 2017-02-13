@@ -37,8 +37,6 @@ def check_tweet(tweet, c):
     c.execute("SELECT * FROM datasentiment")
     rows = c.fetchall()
     for row in rows:
-        if('"' in tweet['text']):
-            return False
         if("'" in tweet['text']):
             return False
         if(tweet['text'][:4] == "RT @"):
