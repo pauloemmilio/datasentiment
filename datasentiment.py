@@ -41,13 +41,16 @@ def check_tweet(tweet, c):
             return False
         if(tweet['text'][:4] == "RT @"):
             return False
+        for k in row:
+            if(k == "'" or k == '"'):
+                return False
     return True
     
 def get_client():        
-    consumer_key = ""
-    consumer_secret = ""
-    token_key = ""
-    token_secret = ""
+    consumer_key = ''
+    consumer_secret = ''
+    token_key = ''
+    token_secret = ''
     consumer = oauth2.Consumer(consumer_key, consumer_secret)
     token = oauth2.Token(token_key, token_secret)
     cliente = oauth2.Client(consumer, token)
@@ -69,8 +72,8 @@ c = con.cursor()
 print('cursor criado')
 
 #   CRIAÇÃO DA TABELA
-c.execute('CREATE TABLE datasentiment (ID INT PRIMARY KEY NOT NULL, TWEET_ID TEXT, USERNAME TEXT NOT NULL, TWEET TEXT NOT NULL)')
-print('tabela criada')
+#c.execute('CREATE TABLE datasentiment (ID INT PRIMARY KEY NOT NULL, TWEET_ID TEXT, USERNAME TEXT NOT NULL, TWEET TEXT NOT NULL)')
+#print('tabela criada')
 
 counter = bd_counter(c)
 filters = [':)',':(',':-)',':-(']
