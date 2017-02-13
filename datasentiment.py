@@ -8,19 +8,6 @@ import psycopg2
 
 #================================   FUNCTIONS   ================================#
 
-def select_index(index):
-    if(index != -1):
-        if(index == 0):
-            return 1
-        elif(index == 1):
-            return 2
-        elif(index == 2):
-            return 3
-        elif(index == 3):
-            return 0
-    else:
-        return random.randint(0,3)
-
 def delete_tweet(c, position):
     c.execute("DELETE FROM datasentiment WHERE ID = " + str(position))
             
@@ -78,15 +65,13 @@ print('cursor criado')
 #print('tabela criada')
 
 counter = bd_counter(c)
-filters = [':)',':(',':-)',':-(']
 index = -1
 non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
+query = ":) OR :( OR :-( OR :-)"
+query_codificada = urllib.parse.quote(query, safe='')
 
 while True:
     flag = True
-    index = select_index(index)
-    query = filters[index]
-    query_codificada = urllib.parse.quote(query, safe='')
     try:
         client = get_client()
         requisicao = client.request('https://api.twitter.com/1.1/search/tweets.json?q=' + query_codificada + '&lang=pt&result_type=mixed')
