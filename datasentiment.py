@@ -44,10 +44,10 @@ def check_tweet(tweet, c):
     return True
     
 def get_client():        
-    consumer_key = 'XvboRjR2hR46xOdtszALnO6x9'
-    consumer_secret = 'XPrDtZqa26LGYbHKy3oHFx9S28KnGCgf7t1YYCLg0ffCTB008Q'
-    token_key = '2488355484-rh8Nl9DfkZa1OQKSmjf04MKs4u9wDDhy96YpKHh'
-    token_secret = 'bMTr9xWpnrFBXEj96YPCJHo6GCw6JSlHzjR3G1nt1TZcj'
+    consumer_key = ""
+    consumer_secret = ""
+    token_key = ""
+    token_secret = ""
     consumer = oauth2.Consumer(consumer_key, consumer_secret)
     token = oauth2.Token(token_key, token_secret)
     cliente = oauth2.Client(consumer, token)
@@ -61,7 +61,7 @@ def bd_counter(c):
 #================================   END FUNCTIONS   ================================#
 
 #   CRIAR CONEXÃO COM O BANCO
-con = psycopg2.connect(host='localhost', user = 'postgres', password = 'hansolo', dbname = 'datasentiment')
+con = psycopg2.connect(host='localhost', user = 'postgres', password = '', dbname = 'datasentiment')
 print("conexão realizada com o banco")
 
 #   CRIAÇÃO DO CURSOR AUXILIAR
