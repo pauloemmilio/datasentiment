@@ -32,13 +32,9 @@ def check_tweet(tweet, c):
             return False
     return True
     
-def get_client():        
-    consumer_key = ''
-    consumer_secret = ''
-    token_key = ''
-    token_secret = ''
-    consumer = oauth2.Consumer(consumer_key, consumer_secret)
-    token = oauth2.Token(token_key, token_secret)
+def get_client(ck, cs, tk, ts, index):
+    consumer = oauth2.Consumer(ck[index], cs[index])
+    token = oauth2.Token(tk[index], ts[index])
     cliente = oauth2.Client(consumer, token)
     return cliente
 
@@ -48,6 +44,25 @@ def bd_counter(c):
     return len(rows)
 
 #================================   END FUNCTIONS   ================================#
+consumer_keys = ['',
+                 '',
+                 '',
+                 '']
+
+consumer_secrets = ['',
+                    '',
+                    '',
+                    '']
+
+token_keys = ['',
+              '',
+              '',
+              '']
+
+token_secrets = ['',
+                 '',
+                 '',
+                 '']
 
 #   CRIAR CONEXÃO COM O BANCO
 con = psycopg2.connect(host='localhost', user = 'postgres', password = '', dbname = 'datasentiment')
@@ -62,7 +77,7 @@ print('cursor criado')
 #print('tabela criada')
 
 counter = bd_counter(c)
-index = -1
+index = 0
 non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
 query = ":) OR :( OR :-( OR :-)"
 query_codificada = urllib.parse.quote(query, safe='')
@@ -70,14 +85,13 @@ query_codificada = urllib.parse.quote(query, safe='')
 while True:
     flag = True
     try:
-        client = get_client()
+        client = get_client(consumer_keys, consumer_secrets, token_keys, token_secrets, index)
         requisicao = client.request('https://api.twitter.com/1.1/search/tweets.json?q=' + query_codificada + '&lang=pt&result_type=mixed')
         decodificar = requisicao[1].decode()
         objeto = json.loads(decodificar)
     except Exception:
         flag = False
-        print('sem conexão com a internet...')
-        print('tentando reconectar...')
+        print('Sem conexão com a internet... Tentando reconectar...')
         time.sleep(60)
         pass
     if(flag):
@@ -98,13 +112,18 @@ while True:
         except Exception:
             counter = bd_counter(c)
             con.commit()
-            print("até o momento foram inseridos " + str(counter) + " tweet(s) no banco de dados...")
-            for i in range(15):
-                print("aguarde " , 15 - i , " minutos")
-                time.sleep(65)
+            print("Tentando encontrar um cliente disponível... Conectando ao cliente N°: ", index , "... Até o momento foram inseridos " + str(counter) + " tweet(s) no banco de dados...")
+            if(index == len(consumer_keys)-1):
+                index = 0
+            else:
+                index+=1
+            #for i in range(15):
+            #    print("aguarde " , 15 - i , " minutos")
+            #    time.sleep(65)
             pass
     counter = bd_counter(c)
     con.commit()
+    
     if(counter>=15000):
         print("finalizado")
         break
