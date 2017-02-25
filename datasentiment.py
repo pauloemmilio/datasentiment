@@ -124,8 +124,9 @@ while True:
     counter = bd_counter(c)
     con.commit()
     
-    if(counter>=15000):
+    if(counter>=20000):
         print("finalizado")
+        print(str(counter), " tweets capturados")
         break
 con.commit()
 con.close()
