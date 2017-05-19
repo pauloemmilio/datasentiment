@@ -116,21 +116,27 @@ def get_cliente(ck, cs, tk, ts, indice):
 
 #CONTADOR DE LINHAS NO BANCO DE DADOS
 def bd_contador(cursor):
-    cursor.execute("SELECT ID FROM Teste2")
+    cursor.execute("SELECT ID FROM TweetsColetados")
     linhas = cursor.fetchall()
     return len(linhas)
+
+def getTweetsBD(cursor):
+    tweets = []
+    cursor.execute("Select * from TweetsColetados")
+    linhas = cursor.fetchall()
+    for linha in linhas:
+        tweets.append([linha[1], linha[2]])
+    return tweets
 
 #REALIZAR O CADASTRO DOS TWEETS NO BANCO DE DADOS
 def salvarTweets(listaPositiva, listaNegativa, conexao, cursor):
     for tweet in listaPositiva:
-        sqlquery = "INSERT INTO Teste2 (ID, TWEET_ID, TWEET) VALUES (" + str(bd_contador(cursor)+1) + ", '" + tweet[0] + "', '" + tweet[1] +"')"
+        sqlquery = "INSERT INTO TweetsColetados (ID, TWEET_ID, TWEET) VALUES (" + str(bd_contador(cursor)+1) + ", '" + tweet[0] + "', '" + tweet[1] +"')"
         cursor.execute(sqlquery)
-        print("salvou o tweet de n° " , bd_contador(cursor))
         conexao.commit()
     for tweet in listaNegativa:
-        sqlquery = "INSERT INTO Teste2 (ID, TWEET_ID, TWEET) VALUES (" + str(bd_contador(cursor)+1) + ", '" + tweet[0] + "', '" + tweet[1] +"')"
+        sqlquery = "INSERT INTO TweetsColetados (ID, TWEET_ID, TWEET) VALUES (" + str(bd_contador(cursor)+1) + ", '" + tweet[0] + "', '" + tweet[1] +"')"
         cursor.execute(sqlquery)
-        print("salvou o tweet de n° " , bd_contador(cursor))
         conexao.commit()
 
 #================================   FIM DAS FUNÇÕES   ================================#
@@ -156,7 +162,7 @@ token_secrets = ['bMTr9xWpnrFBXEj96YPCJHo6GCw6JSlHzjR3G1nt1TZcj',
                  'ffPBvMtX1NqWM4bmuhKTzy1Svih1tZeehVf5pUpmUeiYE']
 
 #   CRIAR conexao COM O BANCO
-conexao = psycopg2.connect(host='localhost', user = 'postgres', password = 'hansolo', dbname = 'Teste2')
+conexao = psycopg2.connect(host='localhost', user = 'postgres', password = 'hansolo', dbname = 'TweetsColetados')
 print("conexao realizada com o banco")
 
 #   CRIAÇÃO DO CURSOR AUXILIAR
@@ -164,7 +170,8 @@ cursor = conexao.cursor()
 print('cursor criado')
 
 #   CRIAÇÃO DA TABELA
-#cursor.execute('CREATE TABLE Teste2 (ID INT PRIMARY KEY NOT NULL, TWEET_ID TEXT, TWEET TEXT NOT NULL)')
+#cursor.execute('CREATE TABLE TweetsColetados (ID INT PRIMARY KEY NOT NULL, TWEET_ID TEXT, TWEET TEXT NOT NULL)')
+conexao.commit()
 print('tabela criada')
 
 indice = 0
@@ -173,30 +180,37 @@ query = ":) OR :( OR :-( OR :-)"
 query_codificada = urllib.parse.quote(query, safe='')
 
 listaGeral = []
+if(bd_contador(cursor) > 0):
+    listaGeral = getTweetsBD(cursor)
+    print(len(listaGeral))
 limiteDeTweets = 500
+quantidadeDeCiclos = 0
 
 inicioColeta = datetime.now()
 print("inicio da coleta: ", inicioColeta)
 
-finalColeta = inicioColeta + timedelta(hours = 6)
+finalColeta = inicioColeta + timedelta(hours = 9)
 print("final da coleta: ", finalColeta)
+
+time.sleep(5)
 
 inicioCiclo = inicioColeta
 print("inicio do ciclo: ", inicioCiclo)
 
 while(finalColeta > datetime.now()):
-    alerta = True
+    alerta1 = True
     finalCiclo = inicioCiclo + timedelta(minutes = 55)
     print("final do ciclo: ", finalCiclo)
 
     #esperando para começar...
     while(inicioCiclo > datetime.now()):
-        if(alerta):
+        if(alerta1):
             print("aguardando novo ciclo...")
-            alerta = False
+            alerta1 = False
 
     listaPositiva = []
     listaNegativa = []
+    quantidadeDeCiclos+=1
 
     #capturar
     while(finalCiclo > datetime.now()) and ((len(listaPositiva) < limiteDeTweets) or (len(listaNegativa) < limiteDeTweets)):
@@ -220,17 +234,18 @@ while(finalColeta > datetime.now()):
                     polaridade = verificarPolaridade(t['text'].translate(non_bmp_map))
                     #se a lista referente a polaridade ainda couber tweets ou não for neutro
                     if(validarLista(polaridade, listaPositiva, listaNegativa, limiteDeTweets)):
-                        print("passou da primeira validação")
                         #se a validação do tweet for ok
                         if(validarTweet(str(t['id']), t['text'].translate(non_bmp_map), listaPositiva, listaNegativa, listaGeral, limiteDeTweets)):
-                            print("passou da segunda validação")
                             #salvar tweet na sua respectiva lista
                             if(polaridade == 'positivo'):
                                 listaPositiva.append([str(t['id']), t['text'].translate(non_bmp_map)])
-                                print("salvou na lista")
                             elif (polaridade == 'negativo'):
                                 listaNegativa.append([str(t['id']), t['text'].translate(non_bmp_map)])
-                                print("salvou na lista")
+                            print("passou nas validações e salvou na lista")
+                        else:
+                            print("não passou nas validações")
+                    else:
+                        print("não passou nas validações")
                     print("quantidade de positivos: ", len(listaPositiva))
                     print("quantidade de negativos: ", len(listaNegativa))
             except Exception:
@@ -258,7 +273,9 @@ while(finalColeta > datetime.now()):
     print("começar a salvar no banco")
     salvarTweets(listaPositiva, listaNegativa, conexao, cursor)
     inicioCiclo = finalCiclo + timedelta(minutes=5)
+    print("realizou ", quantidadeDeCiclos, " coleta(s)")
     if(inicioCiclo >= finalColeta):
+        print("inicio do ciclo é maior que o final da coleta... Encerrar!")
         break
     else:
         print("inicio do ciclo: ", inicioCiclo)
